@@ -20,11 +20,19 @@ func main() {
 	brezCirc(dc, Point{-10, 10}, 20, "teal")
 	brez(dc, Point{30, 80}, Point{12, -5}, "pink")
 	brezArc(dc, Point{0, 0}, 50, 30, 60, "")
+	polygon(dc, []Point{{0, 0}, {10, 10}, {35, 10}, {-10, 40}}, "")
 
 	err := dc.SavePNG("out.png")
 	if err != nil {
-		return
+		panic(err)
 	}
+}
+
+func polygon(dc *gg.Context, pointArray []Point, color string) {
+	for i := 0; i < len(pointArray)-1; i++ {
+		brez(dc, pointArray[i], pointArray[i+1], color)
+	}
+	brez(dc, pointArray[len(pointArray)-1], pointArray[0], color)
 }
 
 func sign(a int) int {
