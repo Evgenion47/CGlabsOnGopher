@@ -19,8 +19,12 @@ func main() {
 	drawAxis(dc, "black")
 	brezCirc(dc, Point{-10, 10}, 20, "teal")
 	brez(dc, Point{30, 80}, Point{12, -5}, "pink")
+	brezArc(dc, Point{0, 0}, 50, 30, 60, "")
 
-	dc.SavePNG("out.png")
+	err := dc.SavePNG("out.png")
+	if err != nil {
+		return
+	}
 }
 
 func sign(a int) int {
@@ -63,8 +67,30 @@ func drawAxis(dc *gg.Context, color string) {
 	}
 }
 
-func brezArc(dc *gg.Context) {
-
+func brezArc(dc *gg.Context, zerop Point, r float64, startAngle float64, endAngle float64, color string) {
+	setColor(dc, color)
+	if startAngle > endAngle {
+		startAngle, endAngle = endAngle, startAngle
+	}
+	startAngle *= math.Pi / 180
+	endAngle *= math.Pi / 180
+	x := int(math.Cos(endAngle) * r)
+	y := int(math.Sin(endAngle) * r)
+	delta := 2 * (1 - int(r))
+	for y >= int(math.Sin(startAngle)*r) {
+		dc.SetPixel(trans(dc, Point{x + zerop.X, y + zerop.Y}))
+		if delta < 0 && 2*delta+2*y-1 <= 0 {
+			x++
+			delta += 2*x - 1
+		} else if delta > 0 && 2*delta-2*x-1 > 0 {
+			y--
+			delta += 1 - 2*y
+		} else {
+			x++
+			y--
+			delta += 2*x - 2*y + 2
+		}
+	}
 }
 
 func brezCirc(dc *gg.Context, c Point, r int, color string) {
