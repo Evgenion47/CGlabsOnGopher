@@ -10,10 +10,8 @@ type Point struct {
 }
 
 func main() {
-	const WIDTH = 100
-	const HEIGHT = 100
-	var mask [WIDTH][HEIGHT]int
-	dc := gg.NewContext(WIDTH, HEIGHT)
+	//dc.Image().At(x, y)
+	dc := gg.NewContext(100, 100)
 
 	setColor(dc, "white")
 	dc.DrawRectangle(0, 0, float64(dc.Width()), float64(dc.Height()))
@@ -21,9 +19,10 @@ func main() {
 
 	drawAxis(dc, "black")
 	brezCirc(dc, Point{-10, 10}, 20, "teal")
-	brez(dc, Point{30, 80}, Point{12, -5}, "pink", mask)
+	brez(dc, Point{0, 0}, Point{5, 5}, "pink")
 	brezArc(dc, Point{0, 0}, 50, 30, 60, "")
-	polygon(dc, []Point{{0, 0}, {10, 10}, {35, 10}, {-10, 40}}, "")
+	//polygon(dc, []Point{{4, 4}, {4, -4}, {-4, -4}, {-4, 4}}, "")
+	simplefill(dc, Point{-20, -20}, "")
 
 	err := dc.SavePNG("out.png")
 	if err != nil {
@@ -31,11 +30,41 @@ func main() {
 	}
 }
 
-func polygon(dc *gg.Context, pointArray []Point, color string, matrix [][]int) {
-	for i := 0; i < len(pointArray)-1; i++ {
-		brez(dc, pointArray[i], pointArray[i+1], color, matrix)
+func stackPop(stack []Point) (Point, []Point) {
+	return stack[len(stack)-1], stack[:len(stack)-1]
+}
+
+func simplefill(dc *gg.Context, startpoint Point, color1 string) {
+	setColor(dc, color1)
+	var stack []Point
+	var PopTMP Point
+	tx, ty := trans(dc, startpoint)
+	startpoint = Point{tx, ty}
+	stack = append(stack, startpoint)
+	for len(stack) > 0 {
+		PopTMP, stack = stackPop(stack)
+		if dc.Image().At(PopTMP.X-1, PopTMP.Y) == dc.Image().At(0, 0) {
+			stack = append(stack, Point{PopTMP.X - 1, PopTMP.Y})
+		}
+		if dc.Image().At(PopTMP.X+1, PopTMP.Y) == dc.Image().At(0, 0) {
+			stack = append(stack, Point{PopTMP.X + 1, PopTMP.Y})
+		}
+		if dc.Image().At(PopTMP.X, PopTMP.Y-1) == dc.Image().At(0, 0) {
+			stack = append(stack, Point{PopTMP.X, PopTMP.Y - 1})
+		}
+		if dc.Image().At(PopTMP.X, PopTMP.Y+1) == dc.Image().At(0, 0) {
+			stack = append(stack, Point{PopTMP.X, PopTMP.Y + 1})
+		}
+		dc.SetPixel(PopTMP.X, PopTMP.Y)
 	}
-	brez(dc, pointArray[len(pointArray)-1], pointArray[0], color, matrix)
+
+}
+
+func polygon(dc *gg.Context, pointArray []Point, color string) {
+	for i := 0; i < len(pointArray)-1; i++ {
+		brez(dc, pointArray[i], pointArray[i+1], color)
+	}
+	brez(dc, pointArray[len(pointArray)-1], pointArray[0], color)
 }
 
 func sign(a int) int {
@@ -147,12 +176,12 @@ func brezCirc(dc *gg.Context, c Point, r int, color string) {
 	}
 }
 
-func brez(dc *gg.Context, a Point, b Point, color string, matrix [][]int) {
+func brez(dc *gg.Context, a Point, b Point, color string) {
 	setColor(dc, color)
 	x := a.X
 	y := a.Y
-	dx := math.Abs(float64(b.X - a.X))
-	dy := math.Abs(float64(b.Y - a.Y))
+	dx := int(math.Abs(float64(b.X - a.X)))
+	dy := int(math.Abs(float64(b.Y - a.Y)))
 	s1 := sign(b.X - a.X)
 	s2 := sign(b.Y - a.Y)
 	var strg int
@@ -161,8 +190,7 @@ func brez(dc *gg.Context, a Point, b Point, color string, matrix [][]int) {
 		strg = 1
 	}
 	e := 2*dy - dx
-	for i := 1; i < int(dx); i++ {
-		matrix[x][y] = 1
+	for i := 1; i <= int(dx)+1; i++ {
 		dc.SetPixel(trans(dc, Point{x, y}))
 		for e >= 0 {
 			if strg == 1 {
