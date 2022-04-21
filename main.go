@@ -10,7 +10,7 @@ type Point struct {
 }
 
 func main() {
-	//dc.Image().At(x, y)
+
 	dc := gg.NewContext(100, 100)
 
 	setColor(dc, "white")
