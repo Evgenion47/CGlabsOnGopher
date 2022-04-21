@@ -10,7 +10,10 @@ type Point struct {
 }
 
 func main() {
-	dc := gg.NewContext(100, 100)
+	const WIDTH = 100
+	const HEIGHT = 100
+	var mask [WIDTH][HEIGHT]int
+	dc := gg.NewContext(WIDTH, HEIGHT)
 
 	setColor(dc, "white")
 	dc.DrawRectangle(0, 0, float64(dc.Width()), float64(dc.Height()))
@@ -18,7 +21,7 @@ func main() {
 
 	drawAxis(dc, "black")
 	brezCirc(dc, Point{-10, 10}, 20, "teal")
-	brez(dc, Point{30, 80}, Point{12, -5}, "pink")
+	brez(dc, Point{30, 80}, Point{12, -5}, "pink", mask)
 	brezArc(dc, Point{0, 0}, 50, 30, 60, "")
 	polygon(dc, []Point{{0, 0}, {10, 10}, {35, 10}, {-10, 40}}, "")
 
@@ -28,11 +31,11 @@ func main() {
 	}
 }
 
-func polygon(dc *gg.Context, pointArray []Point, color string) {
+func polygon(dc *gg.Context, pointArray []Point, color string, matrix [][]int) {
 	for i := 0; i < len(pointArray)-1; i++ {
-		brez(dc, pointArray[i], pointArray[i+1], color)
+		brez(dc, pointArray[i], pointArray[i+1], color, matrix)
 	}
-	brez(dc, pointArray[len(pointArray)-1], pointArray[0], color)
+	brez(dc, pointArray[len(pointArray)-1], pointArray[0], color, matrix)
 }
 
 func sign(a int) int {
@@ -144,7 +147,7 @@ func brezCirc(dc *gg.Context, c Point, r int, color string) {
 	}
 }
 
-func brez(dc *gg.Context, a Point, b Point, color string) {
+func brez(dc *gg.Context, a Point, b Point, color string, matrix [][]int) {
 	setColor(dc, color)
 	x := a.X
 	y := a.Y
@@ -159,6 +162,7 @@ func brez(dc *gg.Context, a Point, b Point, color string) {
 	}
 	e := 2*dy - dx
 	for i := 1; i < int(dx); i++ {
+		matrix[x][y] = 1
 		dc.SetPixel(trans(dc, Point{x, y}))
 		for e >= 0 {
 			if strg == 1 {
