@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/fogleman/gg"
+	"image/color"
 	"math"
 )
 
@@ -21,8 +22,9 @@ func main() {
 	brezCirc(dc, Point{-10, 10}, 20, "teal")
 	brez(dc, Point{0, 0}, Point{5, 5}, "pink")
 	brezArc(dc, Point{0, 0}, 50, 30, 60, "")
-	//polygon(dc, []Point{{4, 4}, {4, -4}, {-4, -4}, {-4, 4}}, "")
+	polygon(dc, []Point{{0, 0}, {30, 0}, {30, -30}, {0, -30}}, "black")
 	simplefill(dc, Point{-20, -20}, "")
+	linefill(dc, Point{20, -10}, color.RGBA{123, 123, 123, 255}, color.RGBA{0, 0, 0, 255})
 
 	err := dc.SavePNG("out.png")
 	if err != nil {
@@ -34,6 +36,94 @@ func stackPop(stack []Point) (Point, []Point) {
 	return stack[len(stack)-1], stack[:len(stack)-1]
 }
 
+func linefill(dc *gg.Context, startpoint Point, colorfill color.RGBA, colorborder color.RGBA) {
+	dc.SetColor(colorfill)
+	var stack []Point
+	var PopTMP Point
+	tx, ty := trans(dc, startpoint)
+	startpoint = Point{tx, ty}
+	dc.SetPixel(startpoint.X, startpoint.Y)
+	stack = append(stack, startpoint)
+
+	for len(stack) > 0 {
+		PopTMP, stack = stackPop(stack)
+		dc.SetPixel(PopTMP.X, PopTMP.Y)
+		xtmp := PopTMP.X
+		PopTMP.X++
+		for dc.Image().At(PopTMP.X, PopTMP.Y) != colorborder {
+			dc.SetPixel(PopTMP.X, PopTMP.Y)
+			PopTMP.X++
+		}
+		xright := PopTMP.X - 1
+		PopTMP.X = xtmp
+		PopTMP.X--
+		for dc.Image().At(PopTMP.X, PopTMP.Y) != colorborder {
+			dc.SetPixel(PopTMP.X, PopTMP.Y)
+			PopTMP.X--
+		}
+		xleft := PopTMP.X + 1
+		PopTMP.X = xleft
+		PopTMP.Y--
+		for PopTMP.X <= xright {
+			fl := false
+			for (dc.Image().At(PopTMP.X, PopTMP.Y) != colorfill) && (PopTMP.X < xright) &&
+				(dc.Image().At(PopTMP.X, PopTMP.Y) != colorborder) {
+				if !fl {
+					fl = true
+				}
+				PopTMP.X++
+			}
+			if fl {
+				if (dc.Image().At(PopTMP.X, PopTMP.Y) != colorfill) && (PopTMP.X == xright) &&
+					(dc.Image().At(PopTMP.X, PopTMP.Y) != colorborder) {
+					stack = append(stack, PopTMP)
+				} else {
+					stack = append(stack, Point{PopTMP.X - 1, PopTMP.Y})
+				}
+				fl = false
+			}
+			xenter := PopTMP.X
+			for ((dc.Image().At(PopTMP.X, PopTMP.Y) != colorfill) ||
+				(dc.Image().At(PopTMP.X, PopTMP.Y) != colorborder)) && (PopTMP.X < xright) {
+				PopTMP.X++
+			}
+			if xenter == PopTMP.X {
+				PopTMP.X++
+			}
+		}
+		PopTMP.X = xleft
+		PopTMP.Y += 2
+		for PopTMP.X <= xright {
+			fl := false
+			for (dc.Image().At(PopTMP.X, PopTMP.Y) != colorfill) && (PopTMP.X < xright) &&
+				(dc.Image().At(PopTMP.X, PopTMP.Y) != colorborder) {
+				if !fl {
+					fl = true
+				}
+				PopTMP.X++
+			}
+			if fl {
+				if (dc.Image().At(PopTMP.X, PopTMP.Y) != colorfill) && (PopTMP.X == xright) &&
+					(dc.Image().At(PopTMP.X, PopTMP.Y) != colorborder) {
+					stack = append(stack, PopTMP)
+				} else {
+					stack = append(stack, Point{PopTMP.X - 1, PopTMP.Y})
+				}
+				fl = false
+			}
+			xenter := PopTMP.X
+			for ((dc.Image().At(PopTMP.X, PopTMP.Y) != colorfill) ||
+				(dc.Image().At(PopTMP.X, PopTMP.Y) != colorborder)) && (PopTMP.X < xright) {
+				PopTMP.X++
+			}
+			if xenter == PopTMP.X {
+				PopTMP.X++
+			}
+		}
+	}
+
+}
+
 func simplefill(dc *gg.Context, startpoint Point, color1 string) {
 	setColor(dc, color1)
 	var stack []Point
@@ -41,6 +131,7 @@ func simplefill(dc *gg.Context, startpoint Point, color1 string) {
 	tx, ty := trans(dc, startpoint)
 	startpoint = Point{tx, ty}
 	stack = append(stack, startpoint)
+
 	for len(stack) > 0 {
 		PopTMP, stack = stackPop(stack)
 		if dc.Image().At(PopTMP.X-1, PopTMP.Y) == dc.Image().At(0, 0) {
