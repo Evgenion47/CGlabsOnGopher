@@ -19,12 +19,12 @@ func main() {
 	dc.Fill()
 
 	drawAxis(dc, "black")
-	brezCirc(dc, Point{-10, 10}, 20, "teal")
+	brezCirc(dc, Point{-10, 10}, 20, "black")
 	brez(dc, Point{0, 0}, Point{5, 5}, "pink")
 	brezArc(dc, Point{0, 0}, 50, 30, 60, "")
 	polygon(dc, []Point{{0, 0}, {30, 0}, {30, -30}, {0, -30}}, "black")
 	simplefill(dc, Point{-20, -20}, "")
-	linefill(dc, Point{20, -10}, color.RGBA{123, 123, 123, 255}, color.RGBA{0, 0, 0, 255})
+	linefill(dc, Point{-3, -4}, color.RGBA{0, 0, 0, 255}, color.RGBA{0, 0, 0, 255})
 
 	err := dc.SavePNG("out.png")
 	if err != nil {
